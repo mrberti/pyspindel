@@ -1,8 +1,33 @@
-EOL = "\n"
-# EOL = "\r\n"
-EOM = "^@" # "\x00"
+try:
+    from .settings import SETTINGS
+except ImportError:
+    from settings import SETTINGS
 
-ACCEPTED_COMMANDS = ["CONNECT", "CONNECTED"]
+# Some shortcuts
+# DANGER: will not get updated when settings were updated online
+EOL = SETTINGS.get("eol")
+EOM = SETTINGS.get("eom")
+
+ACCEPTED_COMMANDS = [
+    # CLIENT COMMANDS
+    "CONNECT",
+    "SEND",
+    "SUBSCRIBE",
+    "UNSUBSCRIBE",
+    "BEGIN",
+    "COMMIT",
+    "ABORT",
+    "ACK",
+    "NACK",
+    "DISCONNECT",
+    "CONNECT",
+    "STOMP",
+    # SERVER COMMANDS
+    "CONNECTED",
+    "MESSAGE",
+    "RECEIPT",
+    "ERROR",
+]
 
 class STOMPMessageError(Exception):
     pass
@@ -12,6 +37,12 @@ class STOMPMessage(object):
         self.command = command
         self.header = header
         self.body = body
+        if self.body:
+            if ("SEND" not in self.command
+                    and "MESSAGE" not in self.command
+                    and "ERROR" not in self.command):
+                raise STOMPMessageError("body not allowed for STOMP Command "
+                                        "{}".format(self.command))
         if message:
             self.parse(message)
 
@@ -59,15 +90,6 @@ class STOMPMessage(object):
         self.__init__(command=command, header=header, body=body)
 
 def main():
-    msg = STOMPMessage(
-        "CONNECT",
-        {
-            "accept-version": "1.0,1.1,1.2",
-            "host": "pyspindel",
-        },
-        "asdasd")
-    # print(repr(msg))
-    # print(msg)
     test_msgs = [
         "CONNECT\n\n{EOM}".format(EOM=EOM),
         "CONNECT\n\n{EOM}\r\n".format(EOM=EOM),
@@ -76,6 +98,7 @@ def main():
         "CONNECT\nkey:val\n{EOM}".format(EOM=EOM),
         "CONNECT\n{EOM}".format(EOM=EOM),
         "CONNECT\n\n".format(EOM=EOM),
+        "SEND\n\nThis is a text.{EOM}".format(EOM=EOM),
     ]
     for msg in test_msgs:
         try:

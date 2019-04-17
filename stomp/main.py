@@ -39,16 +39,9 @@ print("Connected to Wifi '{}': {}, {} dB"
 
 # Indicate activity with LEDs
 LED.on()
+
 import stomp
-try:
-    stomp_server = stomp.STOMPServer(reset=True)
-    stomp_server.listen()
-    time.sleep(1)
-    while 1:
-        stomp_server.handle_connections()
-        pass
-except KeyboardInterrupt:
-    pass
-time.sleep(1)
+stomp.main()
+
 LED.off()
-wemos.go_to_sleep(1000)
+# wemos.go_to_sleep(1000)
